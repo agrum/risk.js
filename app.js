@@ -12,11 +12,14 @@ var users = require('./routes/users');
 var app = express();
 
 // database connection
-app.db = mongoose.createConnection('mongodb://localhost/test');
+app.db = mongoose.createConnection('mongodb://localhost/riskjs');
 app.db.on('error', console.error.bind(console, 'connection error:'));
 app.db.once('open', function() {
   console.log("Connected to database");
 });
+
+//config data models
+require('./models')(app, mongoose);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

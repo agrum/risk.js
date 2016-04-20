@@ -6,7 +6,8 @@ exports = module.exports = function(app, mongoose) {
       type: String,
       default: require('../utils/helpers').generateGUID
     },
-    points: [{ type: mongoose.Schema.Types.Mixed }]
+    name: String,
+    path: String
   });
   app.db.model('Territory', territorySchema);
 };

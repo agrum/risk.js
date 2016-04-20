@@ -13,20 +13,43 @@ Risk.Model.Territory = Backbone.Model.extend({
     }
   });
 
+Risk.Model.Map = Backbone.Model.extend({
+    idAttribute: '_id',
+    defaults: {
+      name: '',
+      territories: []
+    },
+    url: function() {
+      return '/map/' + this.id;
+    }
+  });
+
 Risk.View.Map = Backbone.View.extend({
     el: '#map',
     initialize: function() {// create a wrapper around native canvas element (with id="c")
       this.canvas = new fabric.Canvas('map');
       this.canvas.setWidth(1024);
       this.canvas.setHeight(792);
+      this.territoryPaths = [];
 
-      this.territory = new Risk.Model.Territory({_id: "9ce17dca-656e-4f3c-af52-b1546c816949"});
-      this.listenTo(this.territory, 'change', this.render);
-      this.territory.fetch();
+      this.map = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});
+      this.listenTo(this.map, 'change', this.acquireTerritories);
+      this.map.fetch();
     },
-    render: function() {
-      this.path = new fabric.Path(this.territory.get("path"));
-      this.canvas.add(this.path);
+    acquireTerritories: function(event) {
+      var mapTerritories = this.map.get("territories");
+      this.territories = [];
+      for(var i in mapTerritories)
+      {
+        var territory = new Risk.Model.Territory({_id: mapTerritories[i]});
+        this.listenTo(territory, 'change', this.renderTerritory);
+        this.territories.push(territory);
+        territory.fetch();
+      }
+    },
+    renderTerritory: function(event) {
+      this.territoryPaths[event.id] = new fabric.Path(event.attributes.path);
+      this.canvas.add(this.territoryPaths[event.id]);
     }
   });
 

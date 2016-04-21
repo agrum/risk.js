@@ -6,6 +6,7 @@ Risk.Model.Territory = Backbone.Model.extend({
     idAttribute: '_id',
     defaults: {
       name: '',
+      color: '',
       path: ''
     },
     url: function() {
@@ -30,7 +31,9 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
           this.listenTo(model, "change", this.render);
 
           // Create raphael element from the model
-          var path = map.canvas.path(model.get("path")).attr({fill: "#f00"});
+          var color = model.get("color");
+          color = (color !== '') ? color : "#f00";
+          var path = map.canvas.path(model.get("path")).attr({fill: color}).attr({stroke: "rgba(0,0,0,0.25)"});
 
           // Set the element of the view
           this.setElement(path);
@@ -56,6 +59,9 @@ Risk.View.Map = Backbone.View.extend({
     el: '#map',
     initialize: function() {// create a wrapper around native canvas element (with id="c")
       this.canvas = Raphael(0, 0, 1024, 792);
+      var rect = this.canvas.rect(0, 0, 1024, 792);
+      rect.attr("fill", "#444");
+      rect.attr("stroke", "#444");
       this.territoryViews = [];
 
       this.map = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});

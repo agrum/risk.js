@@ -7,6 +7,7 @@ exports = module.exports = function(app, mongoose) {
       default: require('../utils/helpers').generateGUID
     },
     name: String,
+    color: String,
     path: String
   });
   app.db.model('Territory', territorySchema);

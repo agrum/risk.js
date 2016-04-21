@@ -6,7 +6,8 @@ Risk.Model.Territory = Backbone.Model.extend({
     idAttribute: '_id',
     defaults: {
       name: '',
-      color: '',
+      color: [0,0,0],
+      shade: 1,
       path: ''
     },
     url: function() {
@@ -31,9 +32,13 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
           this.listenTo(model, "change", this.render);
 
           // Create raphael element from the model
+          var colorModified = [];
           var color = model.get("color");
-          color = (color !== '') ? color : "#f00";
-          var path = map.canvas.path(model.get("path")).attr({fill: color}).attr({stroke: "rgba(0,0,0,0.25)"});
+          var shade = model.get("shade");
+          for(var i in color)
+            colorModified[i] = Math.min(255, Math.floor(color[i] * shade));
+          var colorString = 'rgb('+colorModified[0]+','+colorModified[1]+','+colorModified[2]+')';
+          var path = map.canvas.path(model.get("path")).attr({fill: colorString}).attr({stroke: "rgba(0,0,0,0.25)"});
 
           // Set the element of the view
           this.setElement(path);
@@ -41,11 +46,43 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
 
       events: {
           // Any raphael event
-          "click": "sayType"
+          "click": "sayType",
+          "mouseover": "inColor",
+          "mouseout": "outColor"
       },
 
       sayType: function(evt){
-          console.log(this.model.get("name"));
+        console.log(this.model.get("name"));
+      },
+
+      inColor: function(evt){
+        var model = this.model;
+        var colorModified = [];
+        var colorStroke = [];
+        var color = model.get("color");
+        var shade = model.get("shade");
+        for(var i = 0; i < 3; i++)
+        {
+          colorModified[i] = Math.min(255, Math.floor(color[i] * shade + 10));
+          colorStroke[i] = Math.min(255, Math.floor(color[i] * shade - 20));
+        }
+        var colorString = 'rgb('+colorModified[0]+','+colorModified[1]+','+colorModified[2]+')';
+        this.el.attr({fill: colorString});
+        this.el.attr({stroke: colorStroke});
+        this.el.attr({"stroke-width": 4});
+      },
+
+      outColor: function(evt){
+        var model = this.model;
+        var colorModified = [];
+        var color = model.get("color");
+        var shade = model.get("shade");
+        for(var i = 0; i < 3; i++)
+          colorModified[i] = Math.min(255, Math.floor(color[i] * shade));
+        var colorString = 'rgb('+colorModified[0]+','+colorModified[1]+','+colorModified[2]+')';
+        this.el.attr({fill: colorString});
+        this.el.attr({stroke: "rgba(0,0,0,0.25)"});
+        this.el.attr({"stroke-width": 1});
       },
 
       render: function(){
@@ -59,7 +96,7 @@ Risk.View.Map = Backbone.View.extend({
     el: '#map',
     initialize: function() {// create a wrapper around native canvas element (with id="c")
       this.canvas = Raphael(0, 0, 1024, 792);
-      var rect = this.canvas.rect(0, 0, 1024, 792);
+      var rect = this.canvas.rect(0, 0, 1024, 660);
       rect.attr("fill", "#444");
       rect.attr("stroke", "#444");
       this.territoryViews = [];

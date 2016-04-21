@@ -27,9 +27,8 @@ Risk.Model.Map = Backbone.Model.extend({
 Risk.View.Map = Backbone.View.extend({
     el: '#map',
     initialize: function() {// create a wrapper around native canvas element (with id="c")
-      this.canvas = new fabric.Canvas('map');
-      this.canvas.setWidth(1024);
-      this.canvas.setHeight(792);
+      this.canvas = Raphael(0, 0, 1024, 792);
+      this.canvas.selection = false;
       this.territoryPaths = [];
 
       this.map = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});
@@ -43,13 +42,14 @@ Risk.View.Map = Backbone.View.extend({
       {
         var territory = new Risk.Model.Territory({_id: mapTerritories[i]});
         this.listenTo(territory, 'change', this.renderTerritory);
-        this.territories.push(territory);
+        this.territories[mapTerritories[i]] =territory;
         territory.fetch();
       }
     },
     renderTerritory: function(event) {
-      this.territoryPaths[event.id] = new fabric.Path(event.attributes.path);
-      this.canvas.add(this.territoryPaths[event.id]);
+      this.territoryPaths[event.id] = this.canvas.path(event.attributes.path);
+      this.territoryPaths[event.id].attr("fill", "#f00");
+      this.territoryPaths[event.id].model = this.territories[event.id];
     }
   });
 
@@ -116,3 +116,38 @@ for(var i in data)
   var plop = new Risk.Model.Merp(data[i]);
   plop.save();
 }*/
+
+/*jQuery(document).ready(function() {
+      jQuery('img.svg').each(function(){
+          var $img = jQuery(this);
+          var imgID = $img.attr('id');
+          var imgClass = $img.attr('class');
+          var imgURL = $img.attr('src');
+
+          jQuery.get(imgURL, function(data) {
+              // Get the SVG tag, ignore the rest
+              var $svg = jQuery(data).find('svg');
+
+              // Add replaced image's ID to the new SVG
+              if(typeof imgID !== 'undefined') {
+                  $svg = $svg.attr('id', imgID);
+              }
+              // Add replaced image's classes to the new SVG
+              if(typeof imgClass !== 'undefined') {
+                  $svg = $svg.attr('class', imgClass+' replaced-svg');
+              }
+
+              // Remove any invalid XML tags as per http://validator.w3.org
+              $svg = $svg.removeAttr('xmlns:a');
+
+              // Replace image with new SVG
+              $img.replaceWith($svg);
+
+              // Add an handler
+              jQuery('path').each(function() {
+         jQuery(this).click(function() {alert(jQuery(this).attr('id'));});
+             });
+          });
+
+      });
+});*/

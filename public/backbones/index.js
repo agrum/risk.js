@@ -2,6 +2,8 @@ var Risk = {};
 Risk.Model = {};
 Risk.View = {};
 
+var pendingLink = null;
+
 Risk.Model.Territory = Backbone.Model.extend({
     idAttribute: '_id',
     defaults: {
@@ -11,7 +13,19 @@ Risk.Model.Territory = Backbone.Model.extend({
       path: ''
     },
     url: function() {
-      return '/territory/' + this.id;
+      return '/territory/'+ (this.isNew() ? '' : this.id +'/');
+    }
+  });
+
+Risk.Model.Link = Backbone.Model.extend({
+    idAttribute: '_id',
+    defaults: {
+      name: '',
+      map: '',
+      territories: []
+    },
+    url: function() {
+      return '/link/' + (this.isNew() ? '' : this.id +'/');
     }
   });
 
@@ -22,7 +36,7 @@ Risk.Model.Map = Backbone.Model.extend({
       territories: []
     },
     url: function() {
-      return '/map/' + this.id;
+      return '/map/'+ (this.isNew() ? '' : this.id +'/');
     }
   });
 
@@ -52,7 +66,28 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
       },
 
       sayType: function(evt){
-        console.log(this.model.get("name"));
+
+      },
+      createLink: function(evt){
+        if(pendingLink === null)
+        {
+          pendingLink = new Risk.Model.Link({
+            'name': this.model.get('name'),
+            'map': map.model.get('_id'),
+            'territories': [this.model.get('_id')]
+          });
+          console.log("linkA");
+        }
+        else {
+          var name = pendingLink.get('name');
+          var territories = pendingLink.get('territories');
+          territories.push(this.model.get('_id'));
+          pendingLink.set('territories', territories);
+          pendingLink.set('name', name + '-' + this.model.get('name'));
+          pendingLink.save();
+          pendingLink = null;
+          console.log("linkB");
+        }
       },
 
       inColor: function(evt){
@@ -101,12 +136,12 @@ Risk.View.Map = Backbone.View.extend({
       rect.attr("stroke", "#444");
       this.territoryViews = [];
 
-      this.map = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});
-      this.listenTo(this.map, 'change', this.acquireTerritories);
-      this.map.fetch();
+      this.model = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});
+      this.listenTo(this.model, 'change', this.acquireTerritories);
+      this.model.fetch();
     },
     acquireTerritories: function(event) {
-      var mapTerritories = this.map.get("territories");
+      var mapTerritories = this.model.get("territories");
       this.territories = [];
       for(var i in mapTerritories)
       {

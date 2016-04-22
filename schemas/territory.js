@@ -9,7 +9,11 @@ exports = module.exports = function(app, mongoose) {
     name: String,
     color: [Number],
     shade: Number,
-    path: String
+    path: String,
+    links: [{
+      type: String,
+      ref: 'Link'
+    }]
   });
   app.db.model('Territory', territorySchema);
 };

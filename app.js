@@ -30,10 +30,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.utility = {};
+app.utility.workflow = require('./utils/workflow');
+
 app.use('/', require('./routes/index'));
 app.use('/users', require('./routes/users'));
 app.use('/map', require('./routes/map'));
 app.use('/territory', require('./routes/territory'));
+app.use('/link', require('./routes/link'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

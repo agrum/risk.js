@@ -60,13 +60,17 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
 
       events: {
           // Any raphael event
-          "click": "sayType",
+          "click": "selectMode",
           "mouseover": "inColor",
           "mouseout": "outColor"
       },
 
-      sayType: function(evt){
-
+      selectMode: function(evt){
+        var links = this.model.get('links');
+        for(var i in links)
+        {
+          console.log(map.links[links[i]].get('name'));
+        }
       },
       createLink: function(evt){
         if(pendingLink === null)
@@ -137,22 +141,26 @@ Risk.View.Map = Backbone.View.extend({
       this.territoryViews = [];
 
       this.model = new Risk.Model.Map({_id: "6e379d3c-3f57-4a92-ac7c-ffc0f6803b21"});
-      this.listenTo(this.model, 'change', this.acquireTerritories);
+      this.listenTo(this.model, 'change', this.acquireChildren);
       this.model.fetch();
     },
-    acquireTerritories: function(event) {
+    acquireChildren: function(event) {
       var mapTerritories = this.model.get("territories");
       this.territories = [];
       for(var i in mapTerritories)
       {
-        var territory = new Risk.Model.Territory({_id: mapTerritories[i]});
+        var territory = new Risk.Model.Territory(mapTerritories[i]);
         this.listenTo(territory, 'change', this.addTerritory);
-        this.territories[mapTerritories[i]] = territory;
-        territory.fetch();
+        this.territories[mapTerritories[i]._id] = territory;
+        this.territoryViews[mapTerritories[i]._id] = new Risk.View.Territory({model: territory});
       }
-    },
-    addTerritory: function(event) {
-      this.territoryViews[event.id] = new Risk.View.Territory({model: this.territories[event.id]});
+      var mapLinks = this.model.get("links");
+      this.links = [];
+      for(var iteLink in mapLinks)
+      {
+        var link = new Risk.Model.Link(mapLinks[iteLink]);
+        this.links[mapLinks[iteLink]._id] = link;
+      }
     }
   });
 

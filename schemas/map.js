@@ -1,6 +1,8 @@
 'use strict';
 
 exports = module.exports = function(app, mongoose) {
+  var deepPopulate = require('mongoose-deep-populate')(mongoose);
+
   var mapSchema = new mongoose.Schema({
     _id: {
       type: String,
@@ -16,5 +18,6 @@ exports = module.exports = function(app, mongoose) {
       ref: 'Link'
     }]
   });
+  mapSchema.plugin(deepPopulate, {});
   app.db.model('Map', mapSchema);
 };

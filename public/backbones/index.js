@@ -137,13 +137,13 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
       },
 
       inColor: function(evt){
-        //if(!this.model.get("mode"))
-        //  this.model.set('hovering', true);
+        if(!this.model.get("mode"))
+          this.model.set('hovering', true);
       },
 
       outColor: function(evt){
-        //if(!this.model.get("mode"))
-        //  this.model.set('hovering', false);
+        if(!this.model.get("mode"))
+          this.model.set('hovering', false);
       },
 
       changeRender: function() {

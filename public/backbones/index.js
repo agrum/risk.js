@@ -55,6 +55,7 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
 
           // Set the element of the view
           this.setElement(map.canvas.path(model.get("path")));
+          map.group.add(this.el);
 
           this.render();
       },
@@ -241,6 +242,9 @@ Risk.View.Map = Backbone.View.extend({
     initialize: function() {// create a wrapper around native canvas element (with id="c")
       this.canvas = Snap(1024, 792);
       var rect = this.canvas.rect(0, 0, 1024, 660);
+      this.group = this.canvas.group();
+      this.group.attr({'transform': 's1,0.86'});
+      this.group.add(rect);
       rect.attr("fill", "#444");
       rect.attr("stroke", "#444");
       this.territoryViews = [];

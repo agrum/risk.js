@@ -15,7 +15,10 @@ Risk.Model.Territory = Backbone.Model.extend({
       shade: 1,
       path: '',
       mode: '',
-      hovering: false
+      hovering: false,
+      trigger: '',
+      animationToken: 0,
+      animationDirection: false
     },
     url: function() {
       return '/territory/'+ (this.isNew() ? '' : this.id +'/');
@@ -48,7 +51,7 @@ Risk.Model.Map = Backbone.Model.extend({
 Risk.View.Territory = Backbone.SnapSvgView.extend({
       initialize: function(){
           var model = this.model;
-          this.listenTo(model, "change", this.render);
+          this.listenTo(model, "change", this.changeRender);
 
           // Set the element of the view
           this.setElement(map.canvas.path(model.get("path")));
@@ -64,17 +67,44 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
       },
 
       selectMode: function(evt){
+        var attackerAnimationToken;
+        var defenderAnimationToken;
+        var cancelClick = false;
+        if(attacker)
+        {
+          if(attacker == this.model)
+            cancelClick = true;
+          attackerAnimationToken = this.model.get('animationToken');
+          attacker.set({'mode': '', 'animationToken': attackerAnimationToken+1});
+          attacker = null;
+          for(var potentialDefendersIndex in potentialDefenders)
+          {
+            defenderAnimationToken = potentialDefenders[potentialDefendersIndex].get('animationToken');
+            potentialDefenders[potentialDefendersIndex].set({
+              'mode': '',
+              'animationToken': defenderAnimationToken+1,
+              'animationDirection': false});
+          }
+          potentialDefenders = [];
+        }
+        if(cancelClick)
+          return;
         if(attacker === null)
         {
           attacker = this.model;
-          this.model.set('mode', 'attacker');
+          attackerAnimationToken = this.model.get('animationToken');
+          this.model.set({'mode': 'attacker', 'animationToken': attackerAnimationToken+1});
           var links = this.model.get('links');
           for(var i in links)
           {
             var linkedTerritories = map.links[links[i]].get('territories');
             var oppositeTerritoryId = (linkedTerritories[0] == this.model.get('_id') ? linkedTerritories[1] : linkedTerritories[0]);
             potentialDefenders.push(map.territories[oppositeTerritoryId]);
-            map.territories[oppositeTerritoryId].set('mode', 'potentialDefenders');
+            defenderAnimationToken = map.territories[oppositeTerritoryId].get('animationToken');
+            map.territories[oppositeTerritoryId].set({
+              'mode': 'potentialDefender',
+              'animationToken': defenderAnimationToken+1,
+              'animationDirection': false});
           }
         }
       },
@@ -101,56 +131,70 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
       },
 
       inColor: function(evt){
-        this.model.set('hovering', true);
+        //if(!this.model.get("mode"))
+        //  this.model.set('hovering', true);
       },
 
       outColor: function(evt){
-        this.model.set('hovering', false);
+        //if(!this.model.get("mode"))
+        //  this.model.set('hovering', false);
+      },
+
+      changeRender: function() {
+        this.render();
+      },
+
+      animationRender: function(token) {
+        if(this.model.get("animationToken") == token)
+          this.model.set("animationDirection", !this.model.get('animationDirection'));
       },
 
       render: function(){
+        var self = this;
         var model = this.model;
         var colorModified = [];
         var color = model.get("color");
         var shade = model.get("shade");
         var hovering = model.get("hovering");
         var mode = model.get("mode");
+        var animationToken = model.get("animationToken");
+        var animationDirection = model.get("animationDirection");
         for(var i = 0; i < 3; i++)
         {
           colorModified[i] = Math.min(255, Math.floor(color[i] * shade + (hovering ? 10 : 0)));
         }
         var colorString = 'rgb('+colorModified[0]+','+colorModified[1]+','+colorModified[2]+')';
-
-        if(mode == 'attacker')
+        var patternPath = map.canvas.path("M10-5-10,15M15,0,0,15M0-5-20,15").attr({fill: "none", strokeWidth: 5});
+        if(mode)
         {
-          // Now lets create pattern
-          var p = map.canvas.path("M10-5-10,15M15,0,0,15M0-5-20,15").attr({
-                  fill: "none",
-                  stroke: "#bada55",
-                  strokeWidth: 5
-              });
-          // To create pattern,
-          // just specify dimensions in pattern method:
-          p = p.pattern(0, 0, 10, 10);
-          // Then use it as a fill on big circle
-          this.el.attr({
-              fill: p
-          });
+          var blinkColor = 'white';
+          if(mode == 'attacker')
+            blinkColor = 'rgb(255, 50, 50)';
+          else if(mode == 'potentialDefender')
+            blinkColor = 'rgb(50, 255, 50)';
+          else if(mode == 'defender')
+            blinkColor = 'rgb(50, 50, 250)';
+          var styleB = {fill: "none", strokeWidth: 8, stroke: colorString};
+          var styleA = {fill: "none", strokeWidth: 4, stroke: blinkColor};
+          if(animationDirection)
+          {
+            patternPath.attr(styleA);
+            patternPath.animate(styleB, 1000, null, function() {self.animationRender(animationToken);});
+          }
+          else {
+            patternPath.attr(styleB);
+            patternPath.animate(styleA, 1000, null, function() {self.animationRender(animationToken);});
+          }
         }
-        else if(mode == 'potentialDefenders')
-          this.el.attr("fill", "url('/images/potentialDefenderPattern.png')");
+        patternPath = patternPath.pattern(0, 0, 10, 10);
+
+        if(mode)
+          this.el.attr({fill: patternPath});
         else
           this.el.attr({fill: colorString});
 
         this.el.attr({"stroke-alignment": "inner"});
         this.el.attr({stroke: "rgba(0,0,0,0.25)"});
-        if(hovering)
-        {
-          this.el.attr({"stroke-width": 4});
-        }
-        else {
-          this.el.attr({"stroke-width": 1});
-        }
       }
 
   });

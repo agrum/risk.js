@@ -3,6 +3,9 @@ Risk.Model = {};
 Risk.View = {};
 
 var pendingLink = null;
+var attacker = null;
+var potentialDefenders = [];
+var defender = null;
 
 Risk.Model.Territory = Backbone.Model.extend({
     idAttribute: '_id',
@@ -42,7 +45,7 @@ Risk.Model.Map = Backbone.Model.extend({
     }
   });
 
-Risk.View.Territory = Backbone.RaphaelView.extend({
+Risk.View.Territory = Backbone.SnapSvgView.extend({
       initialize: function(){
           var model = this.model;
           this.listenTo(model, "change", this.render);
@@ -61,10 +64,18 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
       },
 
       selectMode: function(evt){
-        var links = this.model.get('links');
-        for(var i in links)
+        if(attacker === null)
         {
-          console.log(map.links[links[i]].get('name'));
+          attacker = this.model;
+          this.model.set('mode', 'attacker');
+          var links = this.model.get('links');
+          for(var i in links)
+          {
+            var linkedTerritories = map.links[links[i]].get('territories');
+            var oppositeTerritoryId = (linkedTerritories[0] == this.model.get('_id') ? linkedTerritories[1] : linkedTerritories[0]);
+            potentialDefenders.push(map.territories[oppositeTerritoryId]);
+            map.territories[oppositeTerritoryId].set('mode', 'potentialDefenders');
+          }
         }
       },
       createLink: function(evt){
@@ -100,25 +111,44 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
       render: function(){
         var model = this.model;
         var colorModified = [];
-        var colorStroke = [];
         var color = model.get("color");
         var shade = model.get("shade");
         var hovering = model.get("hovering");
+        var mode = model.get("mode");
         for(var i = 0; i < 3; i++)
         {
           colorModified[i] = Math.min(255, Math.floor(color[i] * shade + (hovering ? 10 : 0)));
-          colorStroke[i] = Math.min(255, Math.floor(color[i] * shade + (hovering ? -20 : 0)));
         }
         var colorString = 'rgb('+colorModified[0]+','+colorModified[1]+','+colorModified[2]+')';
 
-        this.el.attr({fill: colorString});
+        if(mode == 'attacker')
+        {
+          // Now lets create pattern
+          var p = map.canvas.path("M10-5-10,15M15,0,0,15M0-5-20,15").attr({
+                  fill: "none",
+                  stroke: "#bada55",
+                  strokeWidth: 5
+              });
+          // To create pattern,
+          // just specify dimensions in pattern method:
+          p = p.pattern(0, 0, 10, 10);
+          // Then use it as a fill on big circle
+          this.el.attr({
+              fill: p
+          });
+        }
+        else if(mode == 'potentialDefenders')
+          this.el.attr("fill", "url('/images/potentialDefenderPattern.png')");
+        else
+          this.el.attr({fill: colorString});
+
+        this.el.attr({"stroke-alignment": "inner"});
+        this.el.attr({stroke: "rgba(0,0,0,0.25)"});
         if(hovering)
         {
-          this.el.attr({stroke: colorStroke});
           this.el.attr({"stroke-width": 4});
         }
         else {
-          this.el.attr({stroke: "rgba(0,0,0,0.25)"});
           this.el.attr({"stroke-width": 1});
         }
       }
@@ -128,7 +158,7 @@ Risk.View.Territory = Backbone.RaphaelView.extend({
 Risk.View.Map = Backbone.View.extend({
     el: '#map',
     initialize: function() {// create a wrapper around native canvas element (with id="c")
-      this.canvas = Raphael(0, 0, 1024, 792);
+      this.canvas = Snap(1024, 792);
       var rect = this.canvas.rect(0, 0, 1024, 660);
       rect.attr("fill", "#444");
       rect.attr("stroke", "#444");

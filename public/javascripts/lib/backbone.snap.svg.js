@@ -1,4 +1,4 @@
-Backbone.RaphaelView = Backbone.View.extend({
+Backbone.SnapSvgView = Backbone.View.extend({
 
     setElement: function(element, delegate, undelegateEvents) {
         if (this.el && undelegateEvents) this.undelegateEvents();

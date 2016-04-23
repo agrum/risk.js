@@ -75,7 +75,10 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
           if(attacker == this.model)
             cancelClick = true;
           attackerAnimationToken = this.model.get('animationToken');
-          attacker.set({'mode': '', 'animationToken': attackerAnimationToken+1});
+          attacker.set({
+            'mode': '',
+            'animationToken': attackerAnimationToken+1,
+            'animationDirection': false});
           attacker = null;
           for(var potentialDefendersIndex in potentialDefenders)
           {
@@ -93,7 +96,10 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
         {
           attacker = this.model;
           attackerAnimationToken = this.model.get('animationToken');
-          this.model.set({'mode': 'attacker', 'animationToken': attackerAnimationToken+1});
+          this.model.set({
+            'mode': 'attacker',
+            'animationToken': attackerAnimationToken+1,
+            'animationDirection': false});
           var links = this.model.get('links');
           for(var i in links)
           {

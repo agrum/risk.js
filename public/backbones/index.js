@@ -71,6 +71,7 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
         var attackerAnimationToken;
         var defenderAnimationToken;
         var cancelClick = false;
+        //Activate model as defender if potential clicked
         if(this.model.get('mode') == 'potentialDefender')
         {
           for(var potentialDefendersIndex1 in potentialDefenders)
@@ -94,6 +95,7 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
           }
           potentialDefenders = [];
         }
+        //Otehrwise, if there was an attacker, deactivate all
         else if(attacker)
         {
           if(attacker == this.model)
@@ -122,8 +124,10 @@ Risk.View.Territory = Backbone.SnapSvgView.extend({
             defender = null;
           }
         }
+        //If the attacker has been clicked, do not select again
         if(cancelClick)
           return;
+        //If there is no attacker, define this model as the one
         if(attacker === null)
         {
           attacker = this.model;

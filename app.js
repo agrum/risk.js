@@ -4,16 +4,24 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var mongoStore = require('connect-mongo')(session);
 var mongoose = require('mongoose');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 
 var app = express();
+
+//passport
+app.passport = passport;
+
+//config
+app.config = require('./config');
 
 // database connection
 app.db = mongoose.createConnection('mongodb://localhost/riskjs');
 app.db.on('error', console.error.bind(console, 'connection error:'));
-app.db.once('open', function() {
-  console.log("Connected to database");
-});
+app.db.once('open', function() {});
 
 //config data models
 require('./models')(app, mongoose);
@@ -28,23 +36,24 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+  resave: true,
+  saveUninitialized: true,
+  secret: app.config.cryptoKeySession,
+  store: new mongoStore({ url: app.config.mongodb.uri })
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.utility = {};
 app.utility.workflow = require('./utils/workflow');
 
-app.use('/', require('./routes/index'));
-app.use('/users', require('./routes/users'));
-app.use('/map', require('./routes/map'));
-app.use('/territory', require('./routes/territory'));
-app.use('/link', require('./routes/link'));
+//setup passport
+require('./passport')(app);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
+//setup routes
+require('./routes')(app);
 
 // error handlers
 

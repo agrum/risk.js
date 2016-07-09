@@ -1,0 +1,24 @@
+extends ../layout
+
+block head
+  title Log In
+
+block body
+  .row
+    .col-md-offset-3.col-md-6.col-xs-12
+      div.page-header
+        h1 Log In
+      form(action='/login', method='post')
+        .form-group
+          label Email address
+          input.form-control(type='text', name='username', placeholder="Username or email address")
+        .form-group
+          label Password
+          input.form-control(type='password', name='password', placeholder="Password")
+        .form-group
+          button.btn.btn-primary(type='submit') Sign in
+          .pull-right
+            label No account ?
+            button.btn.btn-success(type='submit') Sign up
+
+block body

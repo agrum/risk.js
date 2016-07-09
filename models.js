@@ -6,4 +6,5 @@ exports = module.exports = function(app, mongoose) {
     require('./schemas/map')(app, mongoose);
     require('./schemas/link')(app, mongoose);
     require('./schemas/territory')(app, mongoose);
+    require('./schemas/game')(app, mongoose);
 };

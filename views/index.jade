@@ -1,6 +1,33 @@
 extends layout
 
-block content
-  div#map
+block body
+  .row
+    .col-md-offset-3.col-md-6.col-sm-12.text-center
+      h1 #{username}
+      #game-list
+      button.btn.btn-success(data-toggle="modal", data-target="#game-settings") New Game
 
-  script(src='/backbones/index.js')
+  #game-settings.modal.fade
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true")
+          h3#shortcut-settings-label New Game
+        .modal-body
+          form(action='/game' method='post')
+            div
+              label Name (optional):
+              input#project-shortcut-name.form-control(type='text', name='name')
+              label Map:
+              select#map-select.form-control(type='text', name='map')
+            div.text-right
+              button#new-game.btn.btn-success(type='submit') Create
+
+          #shortcut-settings-body
+        .modal-footer
+
+block feet
+  script(type='text/javascript').
+    var mapArray = !{mapArray};
+  script(src='/views/index.js')

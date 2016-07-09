@@ -11,6 +11,7 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
 var app = express();
+var bcrypt = require('bcrypt');
 
 //passport
 app.passport = passport;
@@ -44,7 +45,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
 app.utility = {};
 app.utility.workflow = require('./utils/workflow');
